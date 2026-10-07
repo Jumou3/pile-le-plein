@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#ffffff">
+  <title>Pile le plein</title>
+  <meta name="description" content="Reste appuyé, relâche pile sur le prix. De plus en plus vite, de plus en plus serré.">
+
+  <!-- Aperçu de partage (WhatsApp, iMessage, Instagram…).
+       Remplace SITE_URL_A_REMPLACER par l'adresse finale du jeu, sans slash final.
+       Exemple : https://monpseudo.github.io/pile-le-plein -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Pile le plein">
+  <meta property="og:description" content="Reste appuyé, relâche pile sur le prix. Un pile, et tu gagnes une vie.">
+  <meta property="og:image" content="SITE_URL_A_REMPLACER/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="SITE_URL_A_REMPLACER/og.jpg">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="preload" href="fonts/dseg7-classic-bold-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/barlow-500.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/pump.webp" as="image">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="home">
+  <div id="app">
+
+    <header class="hud">
+      <div class="hud-item"><span class="lbl">Niveau</span><span id="level" class="chip">1</span></div>
+      <div class="hud-item"><span class="lbl">Vies</span><span id="lives" class="chip">0</span></div>
+      <div class="hud-item"><span class="lbl">Record</span><span id="best" class="chip">0</span></div>
+      <button id="mute" class="ghost" type="button" aria-pressed="false">Son : oui</button>
+    </header>
+    <p id="test-badge" class="badge" hidden></p>
+
+    <main id="stage" aria-live="polite">
+
+      <!-- La pompe : image de Robin + écrans superposés (positions en % de l'image) -->
+      <div class="pump" id="pump">
+        <img class="pump-img" src="assets/pump.webp" alt="Pompe à essence" draggable="false">
+
+        <div class="scr obj" aria-label="Objectif">
+          <span id="target" class="obj-num">7,89</span><span class="obj-eur">€</span>
+        </div>
+        <div class="scr lcd prix" aria-label="Prix"><span id="price" class="lcd-num">0,00</span></div>
+        <div class="scr lcd litres" aria-label="Litres"><span id="liters" class="lcd-num">0,00</span></div>
+        <div class="scr lcd ppl" aria-label="Prix au litre"><span id="ppl" class="lcd-num">2,170</span></div>
+
+        <!-- Porte basse de la borne : règles à l'accueil, messages en jeu -->
+        <div class="door">
+          <div class="door-home">
+            <h1 id="title">Pile le plein</h1>
+            <p class="rules-line">Reste appuyé pour pomper.</p>
+            <p class="rules-line">Relâche pile sur l'objectif.</p>
+            <p class="rules-line dim first-dim">Un raté, et c'est fini.</p>
+            <p class="rules-line dim">Pile le plein, et tu gagnes une vie.</p>
+            <button id="play" class="primary" type="button">Jouer</button>
+          </div>
+          <div class="door-play">
+            <p id="msg" class="msg"></p>
+            <p id="tol" class="tol"></p>
+            <p id="hint" class="hint"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="under">
+        <button id="open-board" class="ghost solid" type="button">Classement</button>
+        <p class="keys">Écran : appui long. Clavier : barre espace.</p>
+      </div>
+    </main>
+
+    <!-- Fin de partie : le ticket -->
+    <section id="over" class="overlay" hidden>
+      <div class="card ticket">
+        <p class="ticket-head">Pile le plein</p>
+        <h2 id="over-title">Raté</h2>
+        <p id="over-detail" class="lead"></p>
+        <div class="sep"></div>
+        <div class="stats">
+          <p class="stat"><span class="stat-lbl">Niveaux réussis</span><span id="over-score" class="big">0</span></p>
+          <p class="stat"><span class="stat-lbl">Piles</span><span id="over-piles" class="big small">0</span></p>
+        </div>
+        <div class="sep"></div>
+
+        <div id="submit-zone">
+          <label for="pseudo" class="lbl">Ton pseudo pour le classement</label>
+          <div class="row">
+            <input id="pseudo" type="text" maxlength="16" autocomplete="nickname" autocapitalize="off" spellcheck="false" placeholder="Pseudo">
+            <button id="submit" class="primary" type="button">Envoyer</button>
+          </div>
+        </div>
+        <p id="submit-msg" class="note"></p>
+
+        <ol id="board-inline" class="board"></ol>
+
+        <div class="row">
+          <button id="replay" class="primary" type="button">Rejouer</button>
+          <button id="share" class="ghost" type="button">Partager</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Classement seul : le ticket -->
+    <section id="board-screen" class="overlay" hidden>
+      <div class="card ticket">
+        <p class="ticket-head">Pile le plein</p>
+        <h2>Classement</h2>
+        <div class="sep"></div>
+        <p id="board-status" class="note"></p>
+        <ol id="board" class="board"></ol>
+        <button id="close-board" class="primary" type="button">Fermer</button>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" defer></script>
+  <script src="game.js" defer></script>
+</body>
+</html>

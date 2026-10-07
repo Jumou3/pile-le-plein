@@ -1,0 +1,423 @@
+/* =====================================================================
+   PILE LE PLEIN — style (DA de Robin)
+   Les écrans de la pompe sont positionnés en % de l'image (814 x 1208 px),
+   les chiffres sont dimensionnés en cqw (1cqw = 1 % de la largeur de la pompe),
+   donc tout suit la taille de l'image sur n'importe quel écran.
+   ===================================================================== */
+
+/* ---------- Polices ---------- */
+/* Chiffres LCD : DSEG7 Classic Bold Italic (licence OFL, voir fonts/DSEG-LICENSE.txt).
+   La virgule n'existe pas dans DSEG : on la prend dans Barlow Bold Italic. */
+@font-face {
+  font-family: "LCD";
+  src: url("fonts/dseg7-classic-bold-italic.woff2") format("woff2");
+  unicode-range: U+0020-002B, U+002D-003A;
+  font-display: block;
+}
+@font-face {
+  font-family: "LCD";
+  src: url("fonts/barlow-700-italic.woff2") format("woff2");
+  unicode-range: U+002C;
+  font-display: block;
+}
+/* Textes : Barlow (licence OFL) en attendant DIN 2014.
+   Pour utiliser DIN 2014, déclare-la avec @font-face sous le nom "DIN 2014" :
+   elle passera devant Barlow dans --font-din. */
+@font-face { font-family: "Barlow"; font-weight: 300; src: url("fonts/barlow-300.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Barlow"; font-weight: 400; src: url("fonts/barlow-400.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Barlow"; font-weight: 500; src: url("fonts/barlow-500.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Barlow"; font-weight: 600; src: url("fonts/barlow-600.woff2") format("woff2"); font-display: swap; }
+
+/* ---------- Tokens de DA ---------- */
+:root {
+  --paper: #ffffff;          /* fond de page : le blanc détouré des images */
+  --ink: #111214;            /* texte sur blanc, corps de la pompe */
+  --ink-dim: #77797f;
+  --panel: #111214;          /* cartes : noir de la pompe */
+  --panel-line: #2b2c30;
+  --panel-ink: #f4f4f1;
+  --panel-dim: #9b9da3;
+  --lcd-glass: #b3b19c;      /* gris-vert des écrans LCD */
+  --lcd-ink: #121212;
+  --green: #0a8a45;          /* vert de la buse */
+  --green-press: #086f38;
+  --ko: #c62828;
+
+  --font-din: "DIN 2014", "Barlow", "D-DIN", "DIN Alternate", system-ui, sans-serif;
+  --font-lcd: "LCD", "Barlow", ui-monospace, monospace;
+
+  --radius: 14px;
+  --radius-sm: 9px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-din);
+  font-weight: 400;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: none;
+}
+
+#app {
+  position: relative;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overflow: hidden;
+}
+
+/* ---------- HUD ---------- */
+.hud {
+  display: flex;
+  align-items: flex-end;
+  gap: 22px;
+  padding: 12px 18px 6px;
+  position: relative;
+  z-index: 5;
+}
+.hud-item { display: flex; flex-direction: column; gap: 3px; }
+.hud .ghost { margin-left: auto; border-color: #d4d5d8; color: var(--ink); }
+.lbl {
+  font-size: .68rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: var(--ink-dim);
+}
+/* Pastille LCD */
+.chip {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  min-width: 3.1rem;
+  padding: 4px 9px 3px;
+  border-radius: 6px;
+  background: var(--lcd-glass);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35);
+  color: var(--lcd-ink);
+  font-family: var(--font-lcd);
+  font-size: 1.15rem;
+  line-height: 1.1;
+  -webkit-text-stroke: .008em var(--lcd-ink);
+  transition: transform .15s ease, background-color .2s ease;
+}
+.chip.gain { background: #a9d8a4; transform: scale(1.22); }
+.chip.loss { background: #e2a09b; transform: scale(.9); }
+
+.badge {
+  margin: 0 18px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #fff3cd;
+  color: #6b4e00;
+  font-size: .78rem;
+  font-weight: 500;
+}
+.badge[hidden] { display: none; }
+
+/* ---------- Scène ---------- */
+#stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 10px;
+  touch-action: none;
+  cursor: pointer;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Pompe : rapport 814 x 1208 */
+.pump {
+  position: relative;
+  width: min(100%, 470px, calc((100dvh - 150px) * 0.6738));
+  aspect-ratio: 814 / 1208;
+  container-type: inline-size;
+  flex: none;
+  transform-origin: 42.6% 19%;
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1);
+}
+body.playing .pump { transform: scale(1.09); }
+
+.pump-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* Écrans */
+.scr { position: absolute; display: flex; overflow: hidden; pointer-events: none; }
+
+.obj {
+  left: 25.184%; top: 6.871%; width: 30.835%; height: 7.368%;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: .3cqw;
+  color: #fffefa;
+}
+.obj-num {
+  font-family: var(--font-din);
+  font-weight: 500;
+  font-size: 5.7cqw;
+  line-height: 1;
+  letter-spacing: .01em;
+  font-variant-numeric: tabular-nums;
+}
+.obj-eur {
+  font-family: var(--font-din);
+  font-weight: 500;
+  font-size: 3cqw;
+  line-height: 1;
+  margin-left: 1.3cqw;
+}
+
+.lcd {
+  justify-content: flex-end;
+  align-items: flex-end;
+  color: var(--lcd-ink);
+}
+.lcd-num {
+  font-family: var(--font-lcd);
+  line-height: 1;
+  white-space: pre;
+  letter-spacing: -.05em;
+  transform: scaleX(.78);
+  transform-origin: right bottom;
+  -webkit-text-stroke: .008em var(--lcd-ink);
+}
+.prix   { left: 30.958%; top: 16.308%; width: 23.342%; height: 5.712%; padding-right: 1cqw; padding-bottom: .95cqw; }
+.prix .lcd-num { font-size: 5.7cqw; }
+.litres { left: 39.066%; top: 23.924%; width: 12.039%; height: 3.477%; padding-right: .7cqw; padding-bottom: .6cqw; }
+.litres .lcd-num { font-size: 3.45cqw; }
+.ppl    { left: 41.646%; top: 29.387%; width: 9.459%;  height: 3.228%; padding-right: .55cqw; padding-bottom: .55cqw; }
+.ppl .lcd-num { font-size: 3cqw; }
+
+/* Porte basse : accueil / jeu */
+.door {
+  position: absolute;
+  left: 14%; top: 52.4%; width: 50.4%; height: 33%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--panel-ink);
+  pointer-events: none;
+}
+.door > div { width: 100%; flex-direction: column; align-items: center; justify-content: center; }
+.door-home { display: flex; gap: 1.6cqw; }
+.door-play { display: none; gap: 1.8cqw; }
+body.playing .door-home { display: none; }
+body.playing .door-play { display: flex; }
+.door h1 { font-size: 6.3cqw; font-weight: 500; line-height: 1; margin-bottom: 1.2cqw; letter-spacing: .005em; }
+.rules-line { font-size: 2.85cqw; line-height: 1.35; font-weight: 400; white-space: nowrap; }
+.rules-line.first-dim { margin-top: 1.2cqw; }
+.rules-line.dim { color: var(--panel-dim); }
+.door .primary { pointer-events: auto; margin-top: 1.6cqw; font-size: 3.7cqw; padding: 2.6cqw 9cqw; border-radius: 2cqw; }
+
+.msg { min-height: 1.4em; font-size: 5.6cqw; font-weight: 500; line-height: 1.15; }
+.msg.ok { color: #62e08f; }
+.msg.ko { color: #ff7a7a; }
+.tol {
+  min-height: 1.2em;
+  font-size: 2.8cqw;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--panel-dim);
+}
+.hint { min-height: 1.3em; font-size: 3.5cqw; color: var(--panel-ink); opacity: .85; }
+
+/* Sous la pompe */
+.under {
+  width: 100%;
+  max-width: 470px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+body.playing .under { display: none; }
+.keys { font-size: .8rem; color: var(--ink-dim); }
+button.ghost.solid { border-color: #cfd0d4; color: var(--ink); }
+
+body.pumping .pump { animation: rumble .09s linear infinite alternate; }
+@keyframes rumble {
+  from { translate: 0 0; }
+  to   { translate: .6px .5px; }
+}
+body.shake .pump { animation: shake .38s; }
+@keyframes shake {
+  0%, 100% { translate: 0 0; }
+  20% { translate: -9px 0; }
+  40% { translate: 8px 0; }
+  60% { translate: -6px 0; }
+  80% { translate: 4px 0; }
+}
+
+/* ---------- Boutons ---------- */
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 13px 20px;
+  touch-action: manipulation;
+}
+button.primary { background: var(--green); color: #fff; font-weight: 600; }
+button.primary:active { background: var(--green-press); }
+button.ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, .28);
+  color: var(--panel-ink);
+  padding: 9px 14px;
+  font-size: .9rem;
+}
+button:focus-visible, input:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+button:disabled { opacity: .45; cursor: default; }
+
+/* ---------- Overlays ---------- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(255, 255, 255, .72);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  overflow-y: auto;
+}
+.overlay[hidden] { display: none; }
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 26px 22px 34px;
+  text-align: left;
+  max-height: 100%;
+  overflow-y: auto;
+  cursor: default;
+}
+
+/* Ticket de pompe */
+.ticket {
+  background: #f7f5ee;
+  color: var(--ink);
+  border-radius: 6px 6px 0 0;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .22);
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
+  padding-bottom: 40px;
+}
+.ticket-head {
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  text-align: center;
+}
+.ticket h2 { font-size: 2rem; font-weight: 500; line-height: 1.05; text-align: center; }
+.ticket .lead { text-align: center; }
+.ticket .lbl { color: var(--ink-dim); }
+.ticket .note, .ticket .keys { color: var(--ink-dim); }
+.sep { border-top: 2px dashed #bdb9ab; }
+.lead { font-size: 1.05rem; line-height: 1.4; }
+.note { min-height: 1.3em; font-size: .9rem; line-height: 1.4; }
+.row { display: flex; gap: 10px; }
+.row > * { flex: 1; }
+
+.stats { display: flex; flex-direction: column; gap: 6px; }
+.stat { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.stat-lbl { font-size: .95rem; }
+.big {
+  font-family: var(--font-lcd);
+  font-size: 3rem;
+  line-height: 1;
+  -webkit-text-stroke: .008em currentColor;
+}
+.big.small { font-size: 1.7rem; }
+
+input[type="text"] {
+  font: inherit;
+  width: 100%;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid #c9c5b6;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+#submit-zone .row { margin-top: 6px; }
+#submit-zone .row input { flex: 2; }
+
+/* ---------- Classement : lignes pointillées ---------- */
+.board {
+  list-style: none;
+  counter-reset: rank;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 28dvh;
+  overflow-y: auto;
+}
+.board:empty { display: none; }
+.board li {
+  counter-increment: rank;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.board li::before { content: counter(rank); width: 1.7rem; font-weight: 300; color: var(--ink-dim); }
+.board li .name { flex: none; max-width: 52%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board li .dots { flex: 1; border-bottom: 2px dotted #aaa595; transform: translateY(-3px); min-width: 12px; }
+.board li .score { font-family: var(--font-lcd); font-size: 1.15rem; -webkit-text-stroke: .008em currentColor; }
+.board li.me { background: rgba(10, 138, 69, .14); box-shadow: inset 3px 0 0 var(--green); }
+#board { max-height: 48dvh; }
+
+@media (prefers-reduced-motion: reduce) {
+  body.pumping .pump, body.shake .pump { animation: none; }
+  .pump { transition: none; }
+  .chip { transition: none; }
+}
+
+/* Boutons secondaires sur le ticket (papier clair) */
+.ticket button.ghost { border-color: #bdb9ab; color: var(--ink); background: transparent; }
+
+/* Pile ! : la pompe s'illumine */
+body.pile .pump { animation: pileGlow 1.4s ease-out; }
+@keyframes pileGlow {
+  0%   { filter: drop-shadow(0 0 0 rgba(30, 210, 120, 0)); }
+  18%  { filter: drop-shadow(0 0 30px rgba(30, 210, 120, .9)); }
+  100% { filter: drop-shadow(0 0 0 rgba(30, 210, 120, 0)); }
+}
+body.pile .msg { font-size: 7.4cqw; }
+@media (prefers-reduced-motion: reduce) { body.pile .pump { animation: none; } }
