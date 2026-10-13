@@ -6,7 +6,7 @@ Site 100 % statique (HTML, CSS, JS, aucun build) + Supabase pour le classement p
 
 ## Tester en local (sans rien configurer)
 
-Ouvre `index.html` dans un navigateur. Tant que `config.js` est vide, le classement est local (stocké dans le navigateur).
+Ouvre `index.html` dans un navigateur. À la première visite, une fenêtre « Comment jouer » s'affiche (elle ne revient pas ensuite ; pour la revoir, bouton « Comment jouer ? » sur l'accueil, ou vide les données du site). Tant que `config.js` est vide, le classement est local (stocké dans le navigateur).
 
 ## Mettre en ligne
 
@@ -28,10 +28,10 @@ Joue une partie, réussis au moins un niveau, envoie un score : il doit apparaî
 
 - `startLives`, `maxLives` : vies de rechange au départ (0) et plafond (5).
 - `pileTol` : un « pile » est à ± ce montant de l'objectif. À 0 (réglage actuel), il faut tomber au centime exact. Pour faciliter, mets par exemple 0.03.
-- `startSpeed`, `speedGrowth`, `maxSpeed` : débit de départ (en L/s ; 1,5 L/s = 3,3 €/s), accélération par niveau, plafond.
+- `startRate`, `rateGrowth`, `maxRate` : débit de départ en €/s (1,5), accélération par niveau (+8 %), plafond. Le débit est constant pendant tout un niveau, la progression se fait de niveau en niveau.
 - `startTol`, `tolDecay`, `minTol` : marge d'erreur au départ (± €), resserrement par niveau, plancher.
-- `targetMin`, `targetMaxBase`, `targetMaxStep`, `targetMaxCap` : fourchette des objectifs.
-- `ppl` : prix au litre affiché (2,170 = moyenne nationale du SP95-E10 au 1er octobre 2026). Si tu le changes, ajuste `startSpeed` pour garder le même rythme en euros par seconde : `startSpeed × ppl` ≈ 3,3.
+- `durMin`, `durMax`, `targetFloor`, `targetMaxCap` : fourchette des objectifs. Un objectif représente 1,5 à 4,5 secondes de pompage, quel que soit le niveau.
+- `ppl` : prix au litre affiché (2,170 = moyenne nationale du SP95-E10 au 1er octobre 2026). Le rythme est réglé en euros par seconde, donc changer `ppl` ne modifie pas la difficulté.
 - `wobbleFrom` : niveau à partir duquel le débit devient irrégulier.
 
 **Régler sans redéployer** : ajoute `?vitesse=0.5` à l'adresse du jeu pour tout ralentir de moitié, `?vitesse=2` pour doubler. Un bandeau jaune s'affiche et les scores ne sont jamais envoyés au classement dans ce mode.
@@ -40,9 +40,8 @@ Les textes du jeu sont dans l'objet `TEXTS`, juste au-dessus. Si tu changes `max
 
 ## La DA (images et polices)
 
-- `assets/pump.webp` : la pompe de Robin (PNG fourni), nettoyée (fond blanc pur), recadrée à 814 × 1208 px.
-- Les chiffres des écrans ne sont pas dans l'image : ils sont posés par-dessus, positionnés en % de l'image, donc ils suivent la taille de l'écran. La porte basse de la borne sert d'écran d'accueil (règles, bouton Jouer) puis de zone de messages en jeu.
-- **Buse qui se débranche** : pas encore en place, il manque l'image de la même pompe avec le logement vide et la buse sortie. Dès qu'elle existe, elle s'ajoute comme l'ancienne.
+- `assets/pump-in.webp` (buse rangée) et `assets/pump-out.webp` (buse sortie) : les deux images de Robin, nettoyées (fond blanc pur) et recadrées à l'identique (1018 × 1208 px). La buse sort quand on appuie, rentre à la manche suivante.
+- Les chiffres des écrans ne sont pas dans l'image : ils sont posés par-dessus, positionnés en % de l'image, donc ils suivent la taille de l'écran. La porte basse de la borne porte le bouton Jouer à l'accueil, puis les messages et les mini-règles en jeu.
 - **Chiffres LCD** : DSEG7 Classic Bold Italic (licence libre OFL, `fonts/DSEG-LICENSE.txt`), étirés et affinés pour coller au rendu de Robin. DSEG n'a pas de virgule : elle vient de Barlow Bold Italic.
 - **Textes** : Barlow (licence libre OFL) en remplacement provisoire de **DIN 2014**, qui est une police payante. Pour passer à DIN 2014 : licence web, puis un `@font-face` nommé `"DIN 2014"` dans `style.css` avec les fichiers woff2. Elle passe automatiquement devant Barlow.
 - `og.jpg`, `icon-32.png`, `icon-180.png`, `icon-512.png` : image de partage et icônes, générées à partir de la pompe.

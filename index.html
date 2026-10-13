@@ -24,7 +24,8 @@
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="preload" href="fonts/dseg7-classic-bold-italic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/barlow-500.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/pump.webp" as="image">
+  <link rel="preload" href="assets/pump-in.webp" as="image">
+  <link rel="preload" href="assets/pump-out.webp" as="image">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="home">
@@ -42,7 +43,8 @@
 
       <!-- La pompe : image de Robin + écrans superposés (positions en % de l'image) -->
       <div class="pump" id="pump">
-        <img class="pump-img" src="assets/pump.webp" alt="Pompe à essence" draggable="false">
+        <img class="pump-img" src="assets/pump-in.webp" alt="Pompe à essence" draggable="false">
+        <img class="pump-img pump-outimg" src="assets/pump-out.webp" alt="" draggable="false">
 
         <div class="scr obj" aria-label="Objectif">
           <span id="target" class="obj-num">7,89</span><span class="obj-eur">€</span>
@@ -51,29 +53,44 @@
         <div class="scr lcd litres" aria-label="Litres"><span id="liters" class="lcd-num">0,00</span></div>
         <div class="scr lcd ppl" aria-label="Prix au litre"><span id="ppl" class="lcd-num">2,170</span></div>
 
-        <!-- Porte basse de la borne : règles à l'accueil, messages en jeu -->
+        <!-- Porte basse de la borne : bouton Jouer à l'accueil, messages et mini-règles en jeu -->
         <div class="door">
           <div class="door-home">
             <h1 id="title">Pile le plein</h1>
-            <p class="rules-line">Reste appuyé pour pomper.</p>
-            <p class="rules-line">Relâche pile sur l'objectif.</p>
-            <p class="rules-line dim first-dim">Un raté, et c'est fini.</p>
-            <p class="rules-line dim">Pile le plein, et tu gagnes une vie.</p>
-            <button id="play" class="primary" type="button">Jouer</button>
+            <button id="play" class="play-btn" type="button">Jouer</button>
           </div>
           <div class="door-play">
             <p id="msg" class="msg"></p>
             <p id="tol" class="tol"></p>
             <p id="hint" class="hint"></p>
+            <p class="mini-rules">Reste appuyé pour pomper.<br>Relâche pile sur l'objectif.<br>Un raté, et c'est fini.<br>Pile le plein, et tu gagnes une vie.</p>
           </div>
         </div>
       </div>
 
       <div class="under">
-        <button id="open-board" class="ghost solid" type="button">Classement</button>
-        <p class="keys">Écran : appui long. Clavier : barre espace.</p>
+        <div class="row">
+          <button id="open-board" class="ghost solid" type="button">Classement</button>
+          <button id="open-rules" class="ghost solid" type="button">Comment jouer ?</button>
+        </div>
       </div>
     </main>
+
+    <!-- Fenêtre « Comment jouer » : à la première visite, puis via « Comment jouer ? » -->
+    <section id="rules" class="overlay" hidden>
+      <div class="card panel" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+        <p class="panel-head">Comment jouer</p>
+        <h2 id="rules-title">Pile le plein</h2>
+        <div class="rules">
+          <p class="rule-1">Reste appuyé pour pomper.</p>
+          <p class="rule-2">Relâche pile sur l'objectif.</p>
+          <p class="rule-3">Un raté, et c'est fini.</p>
+          <p class="rule-4"><b>Pile le plein</b>, et tu gagnes une vie.</p>
+        </div>
+        <p id="rules-controls" class="controls">Écran : appui long. Clavier : barre espace.</p>
+        <button id="rules-play" class="primary big-play" type="button">Jouer</button>
+      </div>
+    </section>
 
     <!-- Fin de partie : le ticket -->
     <section id="over" class="overlay" hidden>

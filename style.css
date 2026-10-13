@@ -1,7 +1,7 @@
 /* =====================================================================
    PILE LE PLEIN — style (DA de Robin)
    Les écrans de la pompe sont positionnés en % de l'image (814 x 1208 px),
-   les chiffres sont dimensionnés en cqw (1cqw = 1 % de la largeur de la pompe),
+   les chiffres sont dimensionnés en cqw (0.8cqw = 1 % de la largeur de la pompe),
    donc tout suit la taille de l'image sur n'importe quel écran.
    ===================================================================== */
 
@@ -129,10 +129,10 @@ html, body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 4px 10px 10px;
+  gap: 12px;
+  padding: 4px 10px 5dvh;
   touch-action: none;
   cursor: pointer;
   min-height: 0;
@@ -142,14 +142,16 @@ html, body {
 /* Pompe : rapport 814 x 1208 */
 .pump {
   position: relative;
-  width: min(100%, 470px, calc((100dvh - 150px) * 0.6738));
-  aspect-ratio: 814 / 1208;
+  width: min(100%, 520px, calc((100dvh - 150px) * 0.8427));
+  aspect-ratio: 1018 / 1208;
   container-type: inline-size;
   flex: none;
-  transform-origin: 42.6% 19%;
+  transform-origin: 33.5% 19.1%;
   transition: transform .45s cubic-bezier(.2, .8, .2, 1);
 }
-body.playing .pump { transform: scale(1.09); }
+/* À l'accueil, la pompe est recentrée (la place de la buse sortie reste vide à droite) ; en jeu elle revient à gauche et zoome */
+body.home .pump { transform: translateX(8.5%); }
+body.playing .pump { transform: scale(1.06); }
 
 .pump-img {
   position: absolute;
@@ -160,21 +162,24 @@ body.playing .pump { transform: scale(1.09); }
   pointer-events: none;
   -webkit-user-drag: none;
 }
+/* Buse rangée (image de base) / buse sortie (par-dessus, visible quand on pompe) */
+.pump-outimg { opacity: 0; transition: opacity .06s linear; }
+body.nozzle-out .pump-outimg { opacity: 1; }
 
 /* Écrans */
 .scr { position: absolute; display: flex; overflow: hidden; pointer-events: none; }
 
 .obj {
-  left: 25.184%; top: 6.871%; width: 30.835%; height: 7.368%;
+  left: 19.548%; top: 6.871%; width: 24.656%; height: 7.368%;
   justify-content: center;
   align-items: flex-end;
-  padding-bottom: .3cqw;
+  padding-bottom: .2.4cqw;
   color: #fffefa;
 }
 .obj-num {
   font-family: var(--font-din);
   font-weight: 500;
-  font-size: 5.7cqw;
+  font-size: 4.56cqw;
   line-height: 1;
   letter-spacing: .01em;
   font-variant-numeric: tabular-nums;
@@ -182,9 +187,9 @@ body.playing .pump { transform: scale(1.09); }
 .obj-eur {
   font-family: var(--font-din);
   font-weight: 500;
-  font-size: 3cqw;
+  font-size: 2.4cqw;
   line-height: 1;
-  margin-left: 1.3cqw;
+  margin-left: 1.04cqw;
 }
 
 .lcd {
@@ -201,17 +206,17 @@ body.playing .pump { transform: scale(1.09); }
   transform-origin: right bottom;
   -webkit-text-stroke: .008em var(--lcd-ink);
 }
-.prix   { left: 30.958%; top: 16.308%; width: 23.342%; height: 5.712%; padding-right: 1cqw; padding-bottom: .95cqw; }
-.prix .lcd-num { font-size: 5.7cqw; }
-.litres { left: 39.066%; top: 23.924%; width: 12.039%; height: 3.477%; padding-right: .7cqw; padding-bottom: .6cqw; }
-.litres .lcd-num { font-size: 3.45cqw; }
-.ppl    { left: 41.646%; top: 29.387%; width: 9.459%;  height: 3.228%; padding-right: .55cqw; padding-bottom: .55cqw; }
-.ppl .lcd-num { font-size: 3cqw; }
+.prix   { left: 24.165%; top: 16.308%; width: 18.664%; height: 5.712%; padding-right: 0.8cqw; padding-bottom: .75.96cqw; }
+.prix .lcd-num { font-size: 4.56cqw; }
+.litres { left: 30.648%; top: 23.924%; width: 9.627%; height: 3.477%; padding-right: .5.6cqw; padding-bottom: .4.8cqw; }
+.litres .lcd-num { font-size: 2.76cqw; }
+.ppl    { left: 32.711%; top: 29.387%; width: 7.564%;  height: 3.228%; padding-right: .43.98cqw; padding-bottom: .43.98cqw; }
+.ppl .lcd-num { font-size: 2.4cqw; }
 
 /* Porte basse : accueil / jeu */
 .door {
   position: absolute;
-  left: 14%; top: 52.4%; width: 50.4%; height: 33%;
+  left: 10.609%; top: 52.4%; width: 40.275%; height: 33%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -221,33 +226,49 @@ body.playing .pump { transform: scale(1.09); }
   pointer-events: none;
 }
 .door > div { width: 100%; flex-direction: column; align-items: center; justify-content: center; }
-.door-home { display: flex; gap: 1.6cqw; }
-.door-play { display: none; gap: 1.8cqw; }
+.door-home { display: flex; gap: 3cqw; }
+.door-play { display: none; gap: 1.6cqw; }
 body.playing .door-home { display: none; }
 body.playing .door-play { display: flex; }
-.door h1 { font-size: 6.3cqw; font-weight: 500; line-height: 1; margin-bottom: 1.2cqw; letter-spacing: .005em; }
-.rules-line { font-size: 2.85cqw; line-height: 1.35; font-weight: 400; white-space: nowrap; }
-.rules-line.first-dim { margin-top: 1.2cqw; }
-.rules-line.dim { color: var(--panel-dim); }
-.door .primary { pointer-events: auto; margin-top: 1.6cqw; font-size: 3.7cqw; padding: 2.6cqw 9cqw; border-radius: 2cqw; }
+.door h1 { font-size: 4.9cqw; font-weight: 500; line-height: 1; letter-spacing: .005em; }
 
-.msg { min-height: 1.4em; font-size: 5.6cqw; font-weight: 500; line-height: 1.15; }
+/* Bouton Jouer : gros, vert, qui pulse */
+.play-btn {
+  pointer-events: auto;
+  width: 100%;
+  font-size: 4.6cqw;
+  font-weight: 600;
+  color: #fff;
+  background: var(--green);
+  padding: 3.6cqw 0;
+  border-radius: 1.9cqw;
+  box-shadow: 0 0 0 0 rgba(30, 210, 120, .55);
+  animation: pulse 1.7s ease-out infinite;
+}
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(30, 210, 120, .55); transform: scale(1); }
+  45%  { transform: scale(1.04); }
+  100% { box-shadow: 0 0 0 3.4cqw rgba(30, 210, 120, 0); transform: scale(1); }
+}
+
+.msg { min-height: 1.4em; font-size: 4.5cqw; font-weight: 500; line-height: 1.15; }
 .msg.ok { color: #62e08f; }
 .msg.ko { color: #ff7a7a; }
 .tol {
   min-height: 1.2em;
-  font-size: 2.8cqw;
+  font-size: 2.24cqw;
   font-weight: 300;
   text-transform: uppercase;
   letter-spacing: .14em;
   color: var(--panel-dim);
 }
-.hint { min-height: 1.3em; font-size: 3.5cqw; color: var(--panel-ink); opacity: .85; }
+.hint { min-height: 1.3em; font-size: 2.8cqw; color: var(--panel-ink); opacity: .85; }
+.mini-rules { margin-top: 2.2cqw; font-size: 2cqw; line-height: 1.4; color: var(--panel-dim); opacity: .8; }
 
 /* Sous la pompe */
 .under {
   width: 100%;
-  max-width: 470px;
+  max-width: 520px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -255,6 +276,7 @@ body.playing .door-play { display: flex; }
   text-align: center;
 }
 body.playing .under { display: none; }
+.under .row { width: 100%; max-width: 360px; }
 .keys { font-size: .8rem; color: var(--ink-dim); }
 button.ghost.solid { border-color: #cfd0d4; color: var(--ink); }
 
@@ -419,5 +441,39 @@ body.pile .pump { animation: pileGlow 1.4s ease-out; }
   18%  { filter: drop-shadow(0 0 30px rgba(30, 210, 120, .9)); }
   100% { filter: drop-shadow(0 0 0 rgba(30, 210, 120, 0)); }
 }
-body.pile .msg { font-size: 7.4cqw; }
+body.pile .msg { font-size: 5.9cqw; }
 @media (prefers-reduced-motion: reduce) { body.pile .pump { animation: none; } }
+
+/* ---------- Fenêtre « Comment jouer » ---------- */
+.card.panel {
+  background: var(--panel);
+  color: var(--panel-ink);
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, .35);
+  padding: 26px 22px 24px;
+  gap: 16px;
+}
+.panel-head { font-size: .72rem; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: var(--panel-dim); text-align: center; }
+.card.panel h2 { font-size: 2.3rem; font-weight: 500; line-height: 1; text-align: center; }
+.rules { display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.rule-1 { font-size: 1.45rem; font-weight: 500; line-height: 1.2; }
+.rule-2 { font-size: 1.2rem; line-height: 1.25; }
+.rule-3 { font-size: .98rem; color: var(--panel-dim); }
+.rule-4 { font-size: 1.02rem; color: var(--panel-ink); }
+.rule-4 b { color: #62e08f; font-weight: 600; }
+.controls { font-size: .85rem; color: var(--panel-dim); text-align: center; }
+.big-play {
+  font-size: 1.5rem;
+  font-weight: 600;
+  padding: 18px 0;
+  border-radius: 14px;
+  width: 100%;
+  animation: pulse-rem 1.7s ease-out infinite;
+}
+@keyframes pulse-rem {
+  0%   { box-shadow: 0 0 0 0 rgba(30, 210, 120, .55); transform: scale(1); }
+  45%  { transform: scale(1.025); }
+  100% { box-shadow: 0 0 0 14px rgba(30, 210, 120, 0); transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .play-btn, .big-play { animation: none; } }

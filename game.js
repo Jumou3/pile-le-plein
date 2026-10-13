@@ -10,18 +10,18 @@
   const CFG = {
     ppl: 2.17,           // prix au litre (€/L), affiché « 2,170 » : SP95-E10, moyenne nationale au 1er octobre 2026
     tank: 70,            // capacité du réservoir (L) : on dépasse = raté
-    startSpeed: 1.5,     // débit manche 1 (L/s), soit ~3,3 €/s (à ppl 2,17)
-    speedGrowth: 1.12,   // multiplicateur de débit par niveau
-    maxSpeed: 40,        // plafond de débit (L/s)
+    startRate: 1.5,      // débit manche 1, en €/s (constant pendant tout un niveau)
+    rateGrowth: 1.08,    // le débit est multiplié par ça à chaque niveau (+8 %)
+    maxRate: 60,         // plafond de débit (€/s)
     startTol: 2.0,       // marge acceptée manche 1 (± €)
     tolDecay: 0.896,     // la marge est multipliée par ça à chaque niveau
     minTol: 0.03,        // marge minimale (± €)
     rampTime: 0.35,      // temps de montée en pression (s)
-    targetMin: 3,        // objectif minimal (€)
-    targetMaxBase: 12,   // objectif maximal = base + niveau × step
-    targetMaxStep: 3.5,
+    durMin: 1.5,         // durée visée d'un plein, mini (s) : objectif mini = débit × durMin
+    durMax: 4.5,         // durée visée d'un plein, maxi (s) : objectif maxi = débit × durMax
+    targetFloor: 3,      // objectif minimal absolu (€)
     targetMaxCap: 110,   // plafond de l'objectif (€), doit rester < tank × ppl
-    wobbleFrom: 8,       // à partir de ce niveau, le débit devient irrégulier
+    wobbleFrom: 10,       // à partir de ce niveau, le débit devient irrégulier
     resultDelay: 1500,   // pause entre deux manches (ms)
     maxLevel: 60,        // doit rester aligné avec supabase.sql
     speedMul: 1,         // multiplicateur de débit (mode test : ?vitesse=0.5)
@@ -83,7 +83,8 @@
     target: $('#target'),
     price: $('#price'), liters: $('#liters'), ppl: $('#ppl'),
     msg: $('#msg'), tol: $('#tol'), hint: $('#hint'),
-    play: $('#play'), openBoard: $('#open-board'),
+    play: $('#play'), openBoard: $('#open-board'), openRules: $('#open-rules'),
+    rules: $('#rules'), rulesPlay: $('#rules-play'), rulesControls: $('#rules-controls'),
     over: $('#over'), overTitle: $('#over-title'), overDetail: $('#over-detail'), overScore: $('#over-score'), overPiles: $('#over-piles'),
     submitZone: $('#submit-zone'), pseudo: $('#pseudo'), submit: $('#submit'), submitMsg: $('#submit-msg'),
     boardInline: $('#board-inline'), replay: $('#replay'), share: $('#share'),
@@ -104,10 +105,13 @@
 
   /* ------------------------------ NIVEAUX ------------------------------ */
   function levelParams(lvl) {
-    const speed = Math.min(CFG.maxSpeed, CFG.startSpeed * Math.pow(CFG.speedGrowth, lvl - 1)) * CFG.speedMul;
+    const rate = Math.min(CFG.maxRate, CFG.startRate * Math.pow(CFG.rateGrowth, lvl - 1)) * CFG.speedMul;   // €/s
+    const speed = rate / CFG.ppl;                                                                           // L/s
     const tol = Math.max(CFG.minTol, round2(CFG.startTol * Math.pow(CFG.tolDecay, lvl - 1)));
-    const targetMax = Math.min(CFG.targetMaxCap, CFG.targetMaxBase + lvl * CFG.targetMaxStep);
-    const target = round2(CFG.targetMin + Math.random() * (targetMax - CFG.targetMin));
+    const base = rate / CFG.speedMul;                       // les objectifs ne dépendent pas du mode test
+    const targetMax = Math.min(CFG.targetMaxCap, Math.max(CFG.targetFloor + 2, base * CFG.durMax));
+    const targetMin = Math.max(CFG.targetFloor, Math.min(targetMax - 1, base * CFG.durMin));
+    const target = round2(targetMin + Math.random() * (targetMax - targetMin));
     const wobbleAmp = lvl >= CFG.wobbleFrom ? Math.min(0.35, 0.05 * (lvl - CFG.wobbleFrom + 1)) : 0;
     return { speed, tol, target, wobbleAmp };
   }
@@ -309,6 +313,8 @@
     el.liters.textContent = fmt(S.liters);
   }
 
+  function nozzleOut(out) { document.body.classList.toggle('nozzle-out', out); }
+
   // Pastille LCD : met à jour la valeur et déclenche un petit flash (gain / perte)
   function setChip(node, value, kind) {
     node.textContent = value;
@@ -331,6 +337,7 @@
     drawCounters();
     setMsg('');
     el.hint.textContent = TEXTS.hintReady;
+    nozzleOut(false);            // la buse est rangée : on la prend en appuyant
     S.phase = 'ready';
   }
 
@@ -338,7 +345,7 @@
     clearTimeout(S.nextTimer);
     S.level = 1; S.lives = CFG.startLives; S.piles = 0; S.lastScore = 0;
     S.submitted = false; S.runPromise = null;
-    el.over.hidden = true; el.boardScreen.hidden = true;
+    el.over.hidden = true; el.boardScreen.hidden = true; el.rules.hidden = true;
     document.body.classList.remove('home');
     document.body.classList.add('playing');      // zoom léger sur le compteur
     setupRound();
@@ -352,6 +359,7 @@
     S.phase = 'pumping';
     S.last = performance.now();
     document.body.classList.add('pumping');
+    nozzleOut(true);
     el.hint.textContent = TEXTS.hintPump;
     Sound.click();
     Sound.startPump();
@@ -373,7 +381,7 @@
     if (S.liters >= CFG.tank) { S.liters = CFG.tank; drawCounters(); return pumpStop(true); }
 
     drawCounters();
-    Sound.updatePump(S.liters / CFG.tank, Math.min(1, p.speed / CFG.maxSpeed));
+    Sound.updatePump(S.liters / CFG.tank, Math.min(1, (p.speed * CFG.ppl) / CFG.maxRate));
     S.raf = requestAnimationFrame(tick);
   }
 
@@ -494,6 +502,7 @@
   el.stage.addEventListener('pointerdown', (e) => {
     if (e.target.closest('button')) return;
     e.preventDefault();
+    if (S.phase === 'menu') { Sound.init(); Sound.resume(); Sound.click(); startGame(); return; }   // appuyer sur la pompe = jouer
     try { el.stage.setPointerCapture(e.pointerId); } catch { /* ignoré */ }
     pumpStart();
   });
@@ -508,6 +517,7 @@
     if (e.code !== 'Space' || e.repeat) return;
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLButtonElement) return;
     e.preventDefault();
+    if (S.phase === 'menu') { Sound.init(); Sound.resume(); startGame(); return; }
     if (!spaceDown) { spaceDown = true; pumpStart(); }
   });
   window.addEventListener('keyup', (e) => {
@@ -518,6 +528,8 @@
 
   el.play.addEventListener('click', () => { Sound.init(); Sound.resume(); Sound.click(); startGame(); });
   el.replay.addEventListener('click', () => { Sound.init(); Sound.resume(); startGame(); });
+  el.openRules.addEventListener('click', () => { el.rules.hidden = false; });
+  el.rulesPlay.addEventListener('click', () => { store.set('pp_rules_seen', true); Sound.init(); Sound.resume(); Sound.click(); startGame(); });
   el.submit.addEventListener('click', submitScore);
   el.pseudo.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitScore(); });
   el.share.addEventListener('click', share);
@@ -543,5 +555,10 @@
     }
     S.params = { target: 0, tol: 0, speed: 0, wobbleAmp: 0 };
     el.lives.textContent = CFG.startLives;
+    // Consigne adaptée à l'appareil
+    const touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    el.rulesControls.textContent = touch ? 'Garde le doigt appuyé sur la pompe.' : 'Clique et reste appuyé, ou maintiens la barre espace.';
+    // Première visite : on explique les règles avant tout
+    if (!store.get('pp_rules_seen', false)) el.rules.hidden = false;
   });
 })();
